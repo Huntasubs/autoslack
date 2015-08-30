@@ -53,7 +53,8 @@ for i in "${deparr[@]}"
 		#is going to be super-differnt. 
 		#and is probably not going to be a sh, but rather a symlink for easiness'
 		#sake. 
-		sh /home/`ps -o user= $(ps -o ppid= $PPID)`/autoslack/autoslack.sh $i
+		cd /home/`ps -o user= $(ps -o ppid= $PPID)`/autoslack/
+		bash autoslack $i
 	done
 fi
 
