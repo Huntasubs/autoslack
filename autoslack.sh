@@ -11,6 +11,13 @@
 
 packagename="$*"
 
+if [[ "$packagename" =~ ^$ ]]; then
+    echo "You don't want to install any packages?"
+    exit 0
+    else
+    echo "attempting to install $packagename"
+fi
+
 SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
 URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
 PREFIX="/tmp"
