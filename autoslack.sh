@@ -9,6 +9,7 @@
 
 #read -p "What package are you installing? " packagename
 
+ourpath=$(pwd)
 packagename="$*"
 
 if [[ "$packagename" =~ ^$ ]]; then
@@ -29,6 +30,7 @@ mkdir /usr/share/autoslack
 rsync -v $SLAURL /usr/share/autoslack
 
 SLACKBUILDS=/usr/share/autoslack/SLACKBUILDS.TXT
+SLACKRCHIVE=/usr/share/autoslack/packages/
 
 URSUFFIX=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep "SLACKBUILD LOCATION:" |sed 's/SLACKBUILD LOCATION: .//g')
 
@@ -50,18 +52,16 @@ for i in "${deparr[@]}"
 	do
 		#haha, we just re-launch the entire process @_@, self-recursion YAY. 
 		#this is going to need to change because obviously the path of the script
-		#is going to be super-differnt. 
-		#and is probably not going to be a sh, but rather a symlink for easiness'
-		#sake. 
-		cd /home/`ps -o user= $(ps -o ppid= $PPID)`/autoslack/
-		bash autoslack $i
+		autoslack $i
 	done
 fi
-
 
 wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $PREFIX/$packagename
 cd $PREFIX/$packagename
 sh *.SlackBuild > temp.txt
 installpath=$(grep "Slackware package" temp.txt | grep "created" | sed 's/created.//g' | sed 's/Slackware package //g')
 installpkg $installpath
+mv $installpath $SLACKRCHIVE
+cd $ourpath
 exit
+
