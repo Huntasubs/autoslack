@@ -1,11 +1,11 @@
 #!/bin/bash
-##AutoSlack
-##Type in the package name, 
-##it will go into slackbuilds.org 
-##find the package for you
-##download and install, 
-##with really stupid dep resolution that involves spawning another copy of this process. 
-##So far I've only tested this with a package with one dependency. 
+#AutoSlack
+#to grab a package from slackbuilds just type at your prompt 
+#>autoslack $packagename 
+#$packagename can be in any case whatsover, since this does do
+#some rudimentary fuzzy matching. This also resolves dependencies
+#the "Unix way". (Not really, it's just terrible coding, and potentially
+#has the possibility of spawning infinite autoslacks. Autoslack ftagn!
 
 #read -p "What package are you installing? " packagename
 
