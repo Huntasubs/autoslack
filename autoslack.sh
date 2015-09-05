@@ -57,19 +57,26 @@ for i in "${deparr[@]}"
 fi
 
 
+#are we amd64?
 if [[ `uname -a | grep x86_64 -c` = 1 ]]; then
+	#are there seperate sources for amd64?
 	if [[ `grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g'` =~ ^$ ]];
 		then
+			#if not, grab normal sources
 	        wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $PREFIX/$packagename
 		else
+			#if yes, grab regular sources
 			wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g') -P $PREFIX/$packagename
 	fi
 else
+		#we are not amd64, just grab the normal sources
         wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $PREFIX/$packagename
 fi
 
 
 cd $PREFIX/$packagename
+#a clumsy hack, but I oddly-enough, like to be able to read through this information
+#Probably should be offloaded to a /var/log/ somewhere
 sh *.SlackBuild > temp.txt
 installpath=$(grep "Slackware package" temp.txt | grep "created" | sed 's/created.//g' | sed 's/Slackware package //g')
 installpkg $installpath
