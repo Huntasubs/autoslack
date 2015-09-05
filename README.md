@@ -17,5 +17,9 @@ rsync
 grep 
 sed
 
-
+--------------
+installing
+--------------
+This script can probably be run from everywhere you like, but really wants a symlink to autoslack 
+in your $PATH somewhere. 
 
