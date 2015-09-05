@@ -39,7 +39,7 @@ if [[ "$packagename" = "--clean" ]]; then
 			exit 0
 		fi
 	else
-	echo "installing something"
+	echo ""
 fi
 
 #check if packagename is blank
@@ -58,7 +58,16 @@ PREFIX="/tmp"
 #loop to check if stuff exists goes here
 #for now this just rudely assumes that this is ok
 
+#create the autoslack directory if it does not exist and populate with the 
+#correct subdir
+if [[ `ls /usr/share/ | grep autoslack -c` = 0 ]]; then
 mkdir /usr/share/autoslack
+mkdir /usr/share/autoslack/packages
+else
+echo ""
+fi
+
+#rsync our slackbuild database
 rsync -v $SLAURL /usr/share/autoslack
 
 SLACKBUILDS=/usr/share/autoslack/SLACKBUILDS.TXT
