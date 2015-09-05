@@ -12,12 +12,26 @@
 ourpath=$(pwd)
 packagename="$*"
 
+##clean and exit directory
+if [[ "$packagename" = clean ]]; then
+	read -p "Are you sure you want to clean all of your old builds? yes/no " yesno
+		if [[ "$yesno" = yes ]]; then 
+			rm /usr/share/autoslack/packages/*
+			exit 0
+		else
+			exit 0
+		fi
+	else
+	echo "installing something"
+fi
+	
 if [[ "$packagename" =~ ^$ ]]; then
     echo "You don't want to install any packages?"
     exit 0
     else
     echo "attempting to install $packagename"
 fi
+
 
 SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
 URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
