@@ -12,6 +12,7 @@
 ourpath=$(pwd)
 packagename="$*"
 
+
 ##clean and exit directory
 if [[ "$packagename" = clean ]]; then
 	read -p "Are you sure you want to clean all of your old builds? yes/no " yesno
