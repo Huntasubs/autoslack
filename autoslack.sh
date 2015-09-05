@@ -12,9 +12,25 @@
 ourpath=$(pwd)
 packagename="$*"
 
-
+#helptext
+if [[ "$packagename" = "--help" ]]; then
+	echo "NAME:"
+	echo "	autoslack - installs slackbuilds"
+	echo "SYNTAX:"
+	echo "	autoslack $packagename"
+	echo "	for example \"autoslack feh\" will install the feh package"
+	echo "OPTIONS:"
+	echo "	--clean"
+	echo "		cleans the packages directory of old builds"
+	echo "	--help"
+	echo "		returns this help text"
+	exit 0
+else
+	echo ""
+fi
+	
 ##clean and exit directory
-if [[ "$packagename" = clean ]]; then
+if [[ "$packagename" = "--clean" ]]; then
 	read -p "Are you sure you want to clean all of your old builds? yes/no " yesno
 		if [[ "$yesno" = yes ]]; then 
 			rm /usr/share/autoslack/packages/*
@@ -25,7 +41,8 @@ if [[ "$packagename" = clean ]]; then
 	else
 	echo "installing something"
 fi
-	
+
+#check if packagename is blank
 if [[ "$packagename" =~ ^$ ]]; then
     echo "You don't want to install any packages?"
     exit 0
