@@ -66,6 +66,12 @@ mkdir /usr/share/autoslack/packages
 else
 echo ""
 fi
+#let's make a logging directory
+if [[ `ls /var/log/ | grep autoslack -c` = 0 ]]; then
+mkdir /var/log/autoslack
+else
+echo ""
+fi
 
 #rsync our slackbuild database
 rsync -v $SLAURL /usr/share/autoslack
@@ -114,14 +120,20 @@ else
 			wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $PREFIX/$packagename
 fi
 
-
+#set log name
+logfile=$(echo $packagename-`date +%F`.log)
+#build and dump results into logfile
 cd $PREFIX/$packagename
-#a clumsy hack, but I oddly-enough, like to be able to read through this information
-#Probably should be offloaded to a /var/log/ somewhere
-sh *.SlackBuild > temp.txt
-installpath=$(grep "Slackware package" temp.txt | grep "created" | sed 's/created.//g' | sed 's/Slackware package //g')
+#build package
+sh *.SlackBuild >> /var/log/autoslack/$logfile
+#parse our log file for the installfile
+installpath=$(grep "Slackware package" /var/log/autoslack/$logfile | grep "created" | sed 's/created.//g' | sed 's/Slackware package //g')
+#install package
 installpkg $installpath
+#move the installer file to the slackarchive
 mv $installpath $SLACKRCHIVE
+
+#go back to whence ye came
 cd $ourpath
 exit
 
