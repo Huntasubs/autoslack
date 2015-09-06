@@ -26,7 +26,7 @@ if [[ "$packagename" = "--help" ]]; then
 	echo "		returns this help text"
 	exit 0
 else
-	echo ""
+	echo "" > /dev/null
 fi
 	
 ##clean and exit directory
@@ -39,7 +39,7 @@ if [[ "$packagename" = "--clean" ]]; then
 			exit 0
 		fi
 	else
-	echo ""
+	echo "" >> /dev/null
 fi
 
 #check if packagename is blank
@@ -64,13 +64,13 @@ if [[ `ls /usr/share/ | grep autoslack -c` = 0 ]]; then
 mkdir /usr/share/autoslack
 mkdir /usr/share/autoslack/packages
 else
-echo ""
+echo "" > /dev/null
 fi
 #let's make a logging directory
 if [[ `ls /var/log/ | grep autoslack -c` = 0 ]]; then
 mkdir /var/log/autoslack
 else
-echo ""
+echo "" > /dev/null
 fi
 
 #rsync our slackbuild database
