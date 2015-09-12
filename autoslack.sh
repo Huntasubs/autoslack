@@ -7,7 +7,7 @@
 #the "Unix way". (Not really, it's just terrible coding, and potentially
 #has the possibility of spawning infinite autoslacks. Autoslack ftagn!
 
-scriptversion="0.8"
+scriptversion="0.99x"
 SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
 URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
 PREFIX="/tmp"
