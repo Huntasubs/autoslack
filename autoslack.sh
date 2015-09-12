@@ -7,10 +7,6 @@
 #the "Unix way". (Not really, it's just terrible coding, and potentially
 #has the possibility of spawning infinite autoslacks. Autoslack ftagn!
 
-#read -p "What package are you installing? " packagename
-
-ourpath=$(pwd)
-#packagename="$*"
 scriptversion="0.8"
 SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
 URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
@@ -30,16 +26,17 @@ preprerun () {
 
 grabslackbuild () {
 URSUFFIX=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep "SLACKBUILD LOCATION:" |sed 's/SLACKBUILD LOCATION: .//g')
-rsync $URPREFIX$URSUFFIX $PREFIX -r
+rsync -v $URPREFIX/$URSUFFIX $PREFIX -r
 }
 
 
 helptext () {
-echo "NAME:"
+echo ""
+echo " NAME:"
 echo "	autoslack"
-echo "SYNTAX:"
-echo "	$0 [OPTION] ..."
-echo "OPTIONS:"
+echo " SYNTAX:"
+echo "	$0 [OPTIONS] -i <packagename> ..."
+echo " OPTIONS:"
 echo "	-h 			This helptext"
 echo "	-v			script version numer"
 echo "	-c			clean the package archive"
@@ -52,6 +49,9 @@ echo "	-s <packagename>	find \$packagename"
 echo "	-u			update SLACKBUILDS.TXT"
 echo "	-f			forces a rebuild of package and dependencies"
 echo "	-n			attempt to install without grabbing dependencies"
+echo "	-z			skip md5check for source file. DANGEROUS"
+echo " OTHER:		"
+echo "				the -i option needs to be the last one selected"
 }
 
 noopts () {
@@ -126,32 +126,61 @@ for i in "${deparr[@]}"
 fi
 }
 
-curlgrab32 () {
-	url=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g')
-	urlarr=($url)
-		for x in "${urlarr[@]}"
-			do 
 
+arraychecking() {
+			for x in "${urlarr[var]}"
+			do 
 				filename=$(echo $x | sed 's/.*\///g')
 				largefix=$(echo $PREFIX/$packagename/$filename)
 				rm $PREFIX/$packagename/$filename
-				#wget $x -P $PREFIX/$packagename
+				wget $x -P $PREFIX/$packagename
+			if [[ "$MDcheck" != 1 ]]; then
+				for y in "${mdarr[var]}"; do
+					#if [[ `md5sum $filename | sed "s/$filename//g"` = "28643857176697dc66786ee898089ca3" ]]; then
+						if [[ `md5sum $PREFIX/$packagename/$filename | awk '{ print $1 }'` = `echo "$y" | sed 's/ //g'` ]]; then
+							echo "yay"
+							echo "------------got------------"
+							md5sum $PREFIX/$packagename/$filename 
+							echo "----------expected---------"
+							echo "$y"
+							echo "---------------------------"
+							#increment array level to grab the next url and MD5sum
+							var=$((var+1))
+							break
+							else
+							echo "------------got------------"
+							md5sum $PREFIX/$packagename/$filename 
+							echo "----------expected---------"
+							echo "$y"
+							echo "---------------------------"
+							echo $mdarr
+							echo "$package $filename does not pass md5 check. "
+							echo "if you are sure about installing this,"
+							echo "re-run autoslack with the -z option"
+							exit 0
+						fi
+					done
+					else
+				echo "skipping md5check"
+				fi
 			done
+}
+
+
+curlgrab32 (){
+	url=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g')
+	urlarr=($url)
+	md=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 6 | grep "SLACKBUILD MD5SUM" | sed 's/SLACKBUILD MD5SUM: //g')
+	mdarr=($md)
+	arraychecking
 }
 
 curlgrab64 () {
 	url=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g')
 	urlarr=($url)
-		for x in "${urlarr[@]}"
-			do 	
-				filename=$(echo $x | sed 's/.*\///g')
-				echo $filename
-				echo $x
-				largefix=$(echo $PREFIX/$packagename/$filename)
-				rm $PREFIX/$packagename/$filename
-				#mv $PREFIX/$packagename/$filename $PREFIX/$packagename/$filename.old
-				#wget $x -P $PREFIX/$packagename
-			done
+	md=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 7 | grep "SLACKBUILD MD5SUM_x86_64:" | sed 's/SLACKBUILD MD5SUM_x86_64: //g')
+	mdarr=($md)
+	arraychecking
 }
 
 archcheck () {
@@ -190,7 +219,7 @@ mv $installpath $SLACKRCHIVE
 }
 
 
-while getopts "fnjhuvcs:i:r:" option
+while getopts "fnjhzguvcs:i:r:" option
 do 
 	case $option in
 		h )	helptext
@@ -220,6 +249,8 @@ do
 			;;
 		n ) SKIPDEP="1"
 			;;
+		z ) MDcheck="1"
+			;;
 		* ) noopts
 			exit 0
 			;;
@@ -228,7 +259,7 @@ done
 
 
 
-#hah, this is most of the script
+#hah, this was most of the script
 
 preprerun
 prerun
