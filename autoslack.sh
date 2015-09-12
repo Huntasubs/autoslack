@@ -10,56 +10,65 @@
 #read -p "What package are you installing? " packagename
 
 ourpath=$(pwd)
-packagename="$*"
+#packagename="$*"
+scriptversion="0.8"
+SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
+URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
+PREFIX="/tmp"
+SLACKBUILDS=/usr/share/autoslack/SLACKBUILDS.TXT
+SLACKRCHIVE=/usr/share/autoslack/packages/
+logfile=$(echo $packagename-`date +%F`.log)
 
-#helptext
-if [[ "$packagename" = "--help" ]]; then
-	echo "NAME:"
-	echo "	autoslack - installs slackbuilds"
-	echo "SYNTAX:"
-	echo "	autoslack $packagename"
-	echo "	for example \"autoslack feh\" will install the feh package"
-	echo "OPTIONS:"
-	echo "	--clean"
-	echo "		cleans the packages directory of old builds"
-	echo "	--help"
-	echo "		returns this help text"
-	exit 0
-else
-	echo "" > /dev/null
-fi
-	
-##clean and exit directory
-if [[ "$packagename" = "--clean" ]]; then
+preprerun () {
+	if [[ $packagename =~ ^$ ]]; then	
+		echo "You did not select any packages to install, exiting" 
+		exit 0
+	else
+		echo "installing $packagename"
+	fi
+}
+
+grabslackbuild () {
+URSUFFIX=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep "SLACKBUILD LOCATION:" |sed 's/SLACKBUILD LOCATION: .//g')
+rsync $URPREFIX$URSUFFIX $PREFIX -r
+}
+
+
+helptext () {
+echo "NAME:"
+echo "	autoslack"
+echo "SYNTAX:"
+echo "	$0 [OPTION] ..."
+echo "OPTIONS:"
+echo "	-h 			This helptext"
+echo "	-v			script version numer"
+echo "	-c			clean the package archive"
+echo "	-j			Just grab sources, don't build anything,"
+echo "				skip interactive checks"
+echo "	-g			Just grab sources, don't build anything,"
+echo "				don't skipt interactive checks"
+echo "	-i <packagename>	install package. "
+echo "	-s <packagename>	find \$packagename"
+echo "	-u			update SLACKBUILDS.TXT"
+echo "	-f			forces a rebuild of package and dependencies"
+echo "	-n			attempt to install without grabbing dependencies"
+}
+
+noopts () {
+echo "You didn't specify any options"
+echo "Please run autoslack -h for assistance"
+}
+cleanarchive () {
 	read -p "Are you sure you want to clean all of your old builds? yes/no " yesno
-		if [[ "$yesno" = yes ]]; then 
+		if [[ "$yesno" = [yY]* ]]; then 
 			rm /usr/share/autoslack/packages/*
 			exit 0
 		else
 			exit 0
 		fi
-	else
-	echo "" >> /dev/null
-fi
+}
 
-#check if packagename is blank
-if [[ "$packagename" =~ ^$ ]]; then
-    echo "You don't want to install any packages?"
-    exit 0
-    else
-    echo "attempting to install $packagename"
-fi
-
-
-SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
-URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
-PREFIX="/tmp"
-
-#loop to check if stuff exists goes here
-#for now this just rudely assumes that this is ok
-
-#create the autoslack directory if it does not exist and populate with the 
-#correct subdir
+prerun () {
 if [[ `ls /usr/share/ | grep autoslack -c` = 0 ]]; then
 mkdir /usr/share/autoslack
 mkdir /usr/share/autoslack/packages
@@ -72,23 +81,32 @@ mkdir /var/log/autoslack
 else
 echo "" > /dev/null
 fi
+}
 
-#rsync our slackbuild database
+update () {
 rsync -v $SLAURL /usr/share/autoslack
+}
 
-SLACKBUILDS=/usr/share/autoslack/SLACKBUILDS.TXT
-SLACKRCHIVE=/usr/share/autoslack/packages/
+packagecheck () {
+if ((`ls /var/log/packages | grep $packagename -c` >= 1)); then
+	echo "-------------------------------------"
+	echo "$packagename or similar appears to be installed already."
+	ls /var/log/packages | grep $packagename
+	echo "-------------------------------------"
+	read -p "do you want to rebuild / reinstall it? [yes/no]" yesno2
+		if [[ "$yesno2" = [yY]* ]]; then
+			echo "Ok"
+		else
+			echo "not reinstalling"
+			exit 0
+		fi
+	else
+		echo "" > /dev/null
+fi
+}
 
-URSUFFIX=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep "SLACKBUILD LOCATION:" |sed 's/SLACKBUILD LOCATION: .//g')
-
-
-rsync $URPREFIX$URSUFFIX $PREFIX -r
-#Stuff happens here
-#if deps happen grep for 'em
+depcheck () {
 DEPS=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 8 | grep "REQUIRES" | sed 's/SLACKBUILD REQUIRES: //g' | sed 's/%README%//g' | sed 's/  / /g')
-#if Deps 1 or more then resolve deps
-
-
 if [[ "$DEPS" =~ ^$ ]]; then
     echo "NO DEPENDENCIES, CONTINUE"
 else
@@ -99,41 +117,140 @@ for i in "${deparr[@]}"
 	do
 		#haha, we just re-launch the entire process @_@, self-recursion YAY. 
 		#this is going to need to change because obviously the path of the script
-		autoslack $i
+		if [[ "$SKIPBUILD" = 1 ]]; then
+			autoslack -j -i $i
+		else
+			autoslack -i $i
+		fi
 	done
 fi
+}
 
+curlgrab32 () {
+	url=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g')
+	urlarr=($url)
+		for x in "${urlarr[@]}"
+			do 
 
-#are we amd64?
+				filename=$(echo $x | sed 's/.*\///g')
+				largefix=$(echo $PREFIX/$packagename/$filename)
+				rm $PREFIX/$packagename/$filename
+				#wget $x -P $PREFIX/$packagename
+			done
+}
+
+curlgrab64 () {
+	url=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g')
+	urlarr=($url)
+		for x in "${urlarr[@]}"
+			do 	
+				filename=$(echo $x | sed 's/.*\///g')
+				echo $filename
+				echo $x
+				largefix=$(echo $PREFIX/$packagename/$filename)
+				rm $PREFIX/$packagename/$filename
+				#mv $PREFIX/$packagename/$filename $PREFIX/$packagename/$filename.old
+				#wget $x -P $PREFIX/$packagename
+			done
+}
+
+archcheck () {
 if [[ `uname -a | grep x86_64 -c` = 1 ]]; then
 	#are there seperate sources for amd64?
 	if [[ `grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g'` =~ ^$ ]];
 		then
+			curlgrab32
 			#if not, grab normal sources
-			wget -N $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $PREFIX/$packagename 
+			#wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $PREFIX/$packagename 
 		else
-			#if yes, grab regular sources
-			wget -N $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g') -P $PREFIX/$packagename
+			#if 64bit sources
+			curlgrab64
 	fi
 else
 		#we are not amd64, just grab the normal sources
-			wget -N $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $PREFIX/$packagename
+			curlgrab32
 fi
+}
 
-#set log name
-logfile=$(echo $packagename-`date +%F`.log)
-#build and dump results into logfile
-cd $PREFIX/$packagename
-#build package
-sh *.SlackBuild >> /var/log/autoslack/$logfile
+
+
+findpackage () {
+	grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 8 | sed 's/SLACKBUILD //g' | grep -v LOCATION | grep -v DOWNLOAD | grep -v MD5SUM
+	exit 0
+}
+installer () {
+#build and install
+sh $PREFIX/$packagename/*.SlackBuild >> /var/log/autoslack/$logfile
 #parse our log file for the installfile
 installpath=$(grep "Slackware package" /var/log/autoslack/$logfile | grep "created" | sed 's/created.//g' | sed 's/Slackware package //g')
 #install package
 installpkg $installpath
 #move the installer file to the slackarchive
 mv $installpath $SLACKRCHIVE
+}
 
+
+while getopts "fnjhuvcs:i:r:" option
+do 
+	case $option in
+		h )	helptext
+			exit 0
+			;;
+		v )	echo $scriptversion
+			exit 0
+			;;
+		c ) cleanarchive
+			exit 0
+			;;
+		i ) packagename=${OPTARG}
+			;;
+		u )	update
+			exit 0
+			;;
+		s )	packagename=${OPTARG}
+			findpackage
+			exit 0
+			;;
+		f )	SKIPCHECK="1"
+			;;
+		j ) SKIPCHECK="1"
+			SKIPBUILD="1"
+			;;
+		g )	SKIPBUILD="1"
+			;;
+		n ) SKIPDEP="1"
+			;;
+		* ) noopts
+			exit 0
+			;;
+		esac
+done
+
+
+
+#hah, this is most of the script
+
+preprerun
+prerun
+update
+grabslackbuild
+if [[ "$SKIPCHECK" = "1" ]]; then
+		echo "" > /dev/null
+	else
+		packagecheck
+fi
+if [[ "$SKIPDEP" = "1" ]]; then
+		echo "" > /dev/null
+	else
+		depcheck
+fi
+archcheck
+if [[ "$SKIPBUILD" =~ "1" ]]; then
+	echo "" > /dev/null
+	else	
+	echo "INSTALLING"
+	installer
+fi
 #go back to whence ye came
-cd $ourpath
-exit
+exit 0
 
