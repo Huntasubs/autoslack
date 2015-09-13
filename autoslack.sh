@@ -10,7 +10,7 @@
 scriptversion="0.99x"
 SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
 URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
-PREFIX="/tmp"
+BUILDPREFIX="/tmp"
 SLACKBUILDS=/usr/share/autoslack/SLACKBUILDS.TXT
 SLACKRCHIVE=/usr/share/autoslack/packages/
 logfile=$(echo $packagename-`date +%F`.log)
@@ -26,7 +26,7 @@ preprerun () {
 
 grabslackbuild () {
 URSUFFIX=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep "SLACKBUILD LOCATION:" |sed 's/SLACKBUILD LOCATION: .//g')
-rsync -v $URPREFIX/$URSUFFIX $PREFIX -r
+rsync -v $URPREFIX/$URSUFFIX $BUILDPREFIX -r
 }
 
 
@@ -131,16 +131,16 @@ arraychecking() {
 			for x in "${urlarr[var]}"
 			do 
 				filename=$(echo $x | sed 's/.*\///g')
-				largefix=$(echo $PREFIX/$packagename/$filename)
-				rm $PREFIX/$packagename/$filename
-				wget $x -P $PREFIX/$packagename
+				largefix=$(echo $BUILDPREFIX/$packagename/$filename)
+				rm $BUILDPREFIX/$packagename/$filename
+				wget $x -P $BUILDPREFIX/$packagename
 			if [[ "$MDcheck" != 1 ]]; then
 				for y in "${mdarr[var]}"; do
 					#if [[ `md5sum $filename | sed "s/$filename//g"` = "28643857176697dc66786ee898089ca3" ]]; then
-						if [[ `md5sum $PREFIX/$packagename/$filename | awk '{ print $1 }'` = `echo "$y" | sed 's/ //g'` ]]; then
+						if [[ `md5sum $BUILDPREFIX/$packagename/$filename | awk '{ print $1 }'` = `echo "$y" | sed 's/ //g'` ]]; then
 							echo "yay"
 							echo "------------got------------"
-							md5sum $PREFIX/$packagename/$filename 
+							md5sum $BUILDPREFIX/$packagename/$filename 
 							echo "----------expected---------"
 							echo "$y"
 							echo "---------------------------"
@@ -149,7 +149,7 @@ arraychecking() {
 							break
 							else
 							echo "------------got------------"
-							md5sum $PREFIX/$packagename/$filename 
+							md5sum $BUILDPREFIX/$packagename/$filename 
 							echo "----------expected---------"
 							echo "$y"
 							echo "---------------------------"
@@ -190,7 +190,7 @@ if [[ `uname -a | grep x86_64 -c` = 1 ]]; then
 		then
 			curlgrab32
 			#if not, grab normal sources
-			#wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $PREFIX/$packagename 
+			#wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $BUILDPREFIX/$packagename 
 		else
 			#if 64bit sources
 			curlgrab64
@@ -209,7 +209,7 @@ findpackage () {
 }
 installer () {
 #build and install
-sh $PREFIX/$packagename/*.SlackBuild >> /var/log/autoslack/$logfile
+cd $BUILDPREFIX/$packagename/ && { sh *.SlackBuild >> /var/log/autoslack/$logfile ; cd -;}
 #parse our log file for the installfile
 installpath=$(grep "Slackware package" /var/log/autoslack/$logfile | grep "created" | sed 's/created.//g' | sed 's/Slackware package //g')
 #install package
