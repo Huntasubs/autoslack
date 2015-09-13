@@ -13,7 +13,7 @@ URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
 BUILDPREFIX="/tmp"
 SLACKBUILDS=/usr/share/autoslack/SLACKBUILDS.TXT
 SLACKRCHIVE=/usr/share/autoslack/packages/
-logfile=$(echo $packagename-`date +%F`.log)
+
 
 preprerun () {
 	if [[ $packagename =~ ^$ ]]; then	
@@ -21,6 +21,7 @@ preprerun () {
 		exit 0
 	else
 		echo "installing $packagename"
+		logfile=$(echo $packagename-`date +%d_%m_%y`.log)
 	fi
 }
 
@@ -166,20 +167,34 @@ arraychecking() {
 			done
 }
 
+arraychecking2 () {
+	echo "ARRAYCHECK"
+	#echo ${mdarr@}
+	#echo ${urarr@}
+	echo "ARRAYS"
+	echo $urlarr
+	echo $mdarr
+	for x in "${urlarr[var]}"
+		do
+			echo "$x"
+		done
+	exit 0
+}
+
 
 curlgrab32 (){
-	url=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g')
-	urlarr=($url)
-	md=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 6 | grep "SLACKBUILD MD5SUM" | sed 's/SLACKBUILD MD5SUM: //g')
-	mdarr=($md)
+	urls=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g')
+	mds=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 6 | grep "SLACKBUILD MD5SUM" | sed 's/SLACKBUILD MD5SUM: //g')
+	urlarr=($urls)
+	mdarr=($mds)
 	arraychecking
 }
 
 curlgrab64 () {
-	url=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g')
-	urlarr=($url)
-	md=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 7 | grep "SLACKBUILD MD5SUM_x86_64:" | sed 's/SLACKBUILD MD5SUM_x86_64: //g')
-	mdarr=($md)
+	urls=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g')
+	mds=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 7 | grep "SLACKBUILD MD5SUM_x86_64:" | sed 's/SLACKBUILD MD5SUM_x86_64: //g')
+	urlarr=($urls)
+	mdarr=($mds)
 	arraychecking
 }
 
@@ -189,11 +204,13 @@ if [[ `uname -a | grep x86_64 -c` = 1 ]]; then
 	if [[ `grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g'` =~ ^$ ]];
 		then
 			curlgrab32
+			arraychecking
 			#if not, grab normal sources
 			#wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $BUILDPREFIX/$packagename 
 		else
 			#if 64bit sources
 			curlgrab64
+			arraychecking
 	fi
 else
 		#we are not amd64, just grab the normal sources
