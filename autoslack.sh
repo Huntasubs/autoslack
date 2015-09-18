@@ -13,7 +13,7 @@ URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
 BUILDPREFIX="/tmp"
 SLACKBUILDS=/usr/share/autoslack/SLACKBUILDS.TXT
 SLACKRCHIVE=/usr/share/autoslack/packages/
-
+parseslack=0
 
 preprerun () {
     if [[ $packagename =~ ^$ ]]; then	
@@ -106,8 +106,25 @@ packagecheck () {
     fi
 }
 
+parsefromfile () {
+    source $BUILDPREFIX/$packagename/$packagename.info
+#    echo $DOWNLOAD
+#    echo $MD5SUM
+#    echo $DOWNLOAD_x86_64
+#    echo $MD5SUM_x86_64
+#    echo $REQUIRES
+#    DEPS=$REQUIRES
+#    echo $DEPS
+#    exit 0
+}
+
 depcheck () {
-    DEPS=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 8 | grep "REQUIRES" | sed 's/SLACKBUILD REQUIRES: //g' | sed 's/%README%//g' | sed 's/  / /g')
+    if [[ $parseslack = 0 ]]; then
+	parsefromfile
+	DEPS=$REQUIRES
+    else
+	DEPS=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 8 | grep "REQUIRES" | sed 's/SLACKBUILD REQUIRES: //g' | sed 's/%README%//g' | sed 's/  / /g')
+	fi
     if [[ "$DEPS" =~ ^$ ]]; then
 	echo "NO DEPENDENCIES, CONTINUE"
     else
@@ -183,19 +200,29 @@ arraychecking2 () {
 
 
 curlgrab32 (){
-    urls=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g')
-    mds=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 6 | grep "SLACKBUILD MD5SUM" | sed 's/SLACKBUILD MD5SUM: //g')
+    if [[ $parseslack = 0 ]]; then
+	parsefromfile
+	urls=$DOWNLOAD
+	mds=$MD5SUM
+    else
+	urls=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g')
+	mds=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 6 | grep "SLACKBUILD MD5SUM" | sed 's/SLACKBUILD MD5SUM: //g')
+    fi
     urlarr=($urls)
     mdarr=($mds)
-    arraychecking
 }
 
 curlgrab64 () {
-    urls=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g')
-    mds=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 7 | grep "SLACKBUILD MD5SUM_x86_64:" | sed 's/SLACKBUILD MD5SUM_x86_64: //g')
+    if [[ $parseslack = 0 ]]; then
+	parsefromfile
+	urls=$DOWNLOAD_x86_64
+	mds=$MD5SUM_x86_64
+    else
+	urls=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g')
+	mds=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 7 | grep "SLACKBUILD MD5SUM_x86_64:" | sed 's/SLACKBUILD MD5SUM_x86_64: //g')
+    fi
     urlarr=($urls)
     mdarr=($mds)
-    arraychecking
 }
 
 archcheck () {
@@ -240,39 +267,41 @@ installer () {
 }
 
 
-while getopts "fnjhzguvcs:i:r:" option
+while getopts "fnjhxzguvcs:i:r:" option
 do 
     case $option in
-	h )	helptext
-		exit 0
-		;;
-	v )	echo $scriptversion
-		exit 0
-		;;
+	h ) helptext
+	    exit 0
+	    ;;
+	v ) echo $scriptversion
+	    exit 0
+	    ;;
 	c ) cleanarchive
 	    exit 0
 	    ;;
 	i ) packagename=${OPTARG}
 	    ;;
-	u )	update
-		exit 0
-		;;
-	s )	packagename=${OPTARG}
-		findpackage
-		exit 0
-		;;
-	f )	SKIPCHECK="1"
-		;;
+	u ) update
+	    exit 0
+	    ;;
+	s ) packagename=${OPTARG}
+	   findpackage
+	   exit 0
+	   ;;
+	f ) SKIPCHECK="1"
+	    ;;
 	j ) SKIPCHECK="1"
 	    SKIPBUILD="1"
 	    ;;
-	g )	SKIPBUILD="1"
-		;;
+	g ) SKIPBUILD="1"
+	    ;;
 	n ) SKIPDEP="1"
 	    ;;
 	z ) MDcheck="1"
 	    ;;
-	* ) noopts
+	x ) parseslack=1
+	    ;;
+       	* ) noopts
 	    exit 0
 	    ;;
     esac
@@ -286,6 +315,7 @@ preprerun
 prerun
 update
 grabslackbuild
+parsefromfile
 if [[ "$SKIPCHECK" = "1" ]]; then
     echo "" > /dev/null
 else
