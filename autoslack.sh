@@ -287,9 +287,9 @@ do
 	    exit 0
 	    ;;
 	s ) packagename=${OPTARG}
-	   findpackage
-	   exit 0
-	   ;;
+	    findpackage
+	    exit 0
+	    ;;
 	f ) SKIPCHECK="1"
 	    ;;
 	j ) SKIPCHECK="1"
