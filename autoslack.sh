@@ -226,7 +226,11 @@ findpackage () {
 }
 installer () {
 #build and install
-cd $BUILDPREFIX/$packagename/ && { sh *.SlackBuild >> /var/log/autoslack/$logfile ; cd -;}
+#dumb hack to get around some bullshit, because slackbuilds don't enjoy being called remotely. Yay. 
+mypath=$(pwd)
+cd $BUILDPREFIX/$packagename/
+sh *.SlackBuild >> /var/log/autoslack/$logfile
+cd $mypath
 #parse our log file for the installfile
 installpath=$(grep "Slackware package" /var/log/autoslack/$logfile | grep "created" | sed 's/created.//g' | sed 's/Slackware package //g')
 #install package
