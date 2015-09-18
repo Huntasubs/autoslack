@@ -1,3 +1,4 @@
+```
  NAME:
         autoslack
  SYNTAX:
@@ -20,6 +21,7 @@
                                 SLACKBUILDS.TXT
  OTHER:
                                 the -i option needs to be the last one selected
+```
 ---------------------------
 
 
