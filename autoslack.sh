@@ -51,6 +51,8 @@ helptext () {
     echo "	-f			forces a rebuild of package and dependencies"
     echo "	-n			attempt to install without grabbing dependencies"
     echo "	-z			skip md5check for source file. DANGEROUS"
+    echo "	-x			force to read package information from"
+    echo "				SLACKBUILDS.TXT"
     echo " OTHER:		"
     echo "				the -i option needs to be the last one selected"
 }
