@@ -84,6 +84,12 @@ prerun () {
     else
 	echo "" > /dev/null
     fi
+    if ((`grep $packagename $SLACKBUILDS -c` >= 1)); then
+	echo "available"
+    else
+	echo "no package called $packagename found, exiting"
+	exit 0
+    fi
 }
 
 update () {
