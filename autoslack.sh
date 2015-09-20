@@ -5,7 +5,7 @@
 #$packagename can be in any case whatsover, since this does do
 #some rudimentary fuzzy matching. This also resolves dependencies
 #the "Unix way". (Not really, it's just terrible coding, and potentially
-#has the possibility of spawning infinite autoslacks. Autoslack ftagn!
+#has the possibility of spawning infinite autoslacks. Autoslack fhtagn!
 
 scriptversion="0.99x"
 SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
