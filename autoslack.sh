@@ -102,13 +102,20 @@ packagecheck () {
 	echo "$packagename or similar appears to be installed already."
 	ls /var/log/packages | grep $packagename
 	echo "-------------------------------------"
-	read -p "do you want to rebuild / reinstall it? [yes/no]" yesno2
-	if [[ "$yesno2" = [yY]* ]]; then
-	    echo "Ok"
-	else
-	    echo "not reinstalling"
-	    exit 0
-	fi
+	
+	while true; do
+	    read -p "do you want to rebuild / reinstall it? [yes/no] " yesno2
+	    if [[ "$yesno2" = [yY]* ]]; then
+		echo "Ok"
+		break
+	    elif [[ "$yesno2" = [nN]* ]]; then
+		echo "not reinstalling"
+		exit 0
+	    else
+		echo "I didn't catch that"
+		continue
+	    fi
+	done
     else
 	echo "" > /dev/null
     fi
@@ -216,8 +223,29 @@ curlgrab32 (){
 	urls=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g')
 	mds=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 6 | grep "SLACKBUILD MD5SUM" | sed 's/SLACKBUILD MD5SUM: //g')
     fi
+    
     urlarr=($urls)
     mdarr=($mds)
+    if [[ $urlarr = "UNSUPPORTED" ]];
+    then
+	while true; do
+	    read -p "32bit not supported. Attempt to grab 64bit anyway? [yes/no] " y2n
+	    if [[ $y2n = [yY]* ]]; then
+		curlgrab64
+		break
+	    elif [[ $y2n = [nN]* ]]; then
+		 echo "not doing anything"
+		 exit 0
+	    else
+		echo "I didn't catch that"
+		continue
+	    fi
+	done
+    else
+	break
+    fi
+
+	
 }
 
 curlgrab64 () {
@@ -225,12 +253,33 @@ curlgrab64 () {
 	parsefromfile
 	urls=$DOWNLOAD_x86_64
 	mds=$MD5SUM_x86_64
-    else
+    else	
 	urls=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g')
 	mds=$(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 7 | grep "SLACKBUILD MD5SUM_x86_64:" | sed 's/SLACKBUILD MD5SUM_x86_64: //g')
     fi
     urlarr=($urls)
     mdarr=($mds)
+
+    if [[ $urlarr = "UNSUPPORTED" ]];
+    then
+	while true; do
+	    read -p "64bit not supported. Attempt to grab 32bit anyway? [yes/no] " y2n
+	    if [[ $y2n = [yY]* ]]; then
+		curlgrab32
+		break
+	    elif [[ $y2n = [nN]* ]]; then
+		echo "not doing anything"
+		exit 0
+	    else
+		echo "I didn't catch that"
+		continue
+	    fi
+	done
+	
+    else
+	break
+    fi
+
 }
 
 archcheck () {
@@ -240,8 +289,6 @@ archcheck () {
 	then
 	    curlgrab32
 	    arraychecking
-	    #if not, grab normal sources
-	    #wget $(grep -iFx "SLACKBUILD NAME: $packagename" $SLACKBUILDS -A 4 | grep DOWNLOAD | sed  's/SLACKBUILD DOWNLOAD: //g') -P $BUILDPREFIX/$packagename 
 	else
 	    #if 64bit sources
 	    curlgrab64
