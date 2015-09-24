@@ -231,11 +231,11 @@ curlgrab32 (){
     if [[ $URLARR = "UNSUPPORTED" ]];
     then
 	while true; do
-	    read -p "32bit not supported. Attempt to grab 64bit anyway? [yes/no] " y2n
-	    if [[ $y2n = [yY]* ]]; then
+	    read -p "32bit not supported. Attempt to grab 64bit anyway? [yes/no] " YESNO
+	    if [[ $YESNO = [yY]* ]]; then
 		curlgrab64
 		break
-	    elif [[ $y2n = [nN]* ]]; then
+	    elif [[ $YESNO = [nN]* ]]; then
 		 echo "not doing anything"
 		 exit 0
 	    else
