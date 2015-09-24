@@ -49,6 +49,7 @@ helptext () {
     echo "	-s <packagename>	find \$packagename"
     echo "	-u			update SLACKBUILDS.TXT"
     echo "	-f			forces a rebuild of package and dependencies"
+    echo "	-m			builds but does not install package"
     echo "	-n			attempt to install without grabbing dependencies"
     echo "	-z			skip md5check for source file. DANGEROUS"
     echo "	-x			force to read package information from"
@@ -316,13 +317,19 @@ installer () {
     #parse our log file for the installfile
     installpath=$(grep "Slackware package" /var/log/autoslack/$logfile | grep "created" | sed 's/created.//g' | sed 's/Slackware package //g')
     #install package
-    installpkg $installpath
+    if [[ $SKIPINSTALL = 1 ]]; then
+	echo "Did not install"
+	echo $installpath
+	exit 0
+    else
+	installpkg $installpath
+    fi
     #move the installer file to the slackarchive
     mv $installpath $SLACKRCHIVE
 }
 
 
-while getopts "fnjhxzguvcs:i:r:" option
+while getopts "fnjhxzgmuvcs:i:r:" option
 do 
     case $option in
 	h ) helptext
@@ -351,6 +358,8 @@ do
 	g ) SKIPBUILD="1"
 	    ;;
 	n ) SKIPDEP="1"
+	    ;;
+	m ) SKIPINSTALL="1"
 	    ;;
 	z ) MDcheck="1"
 	    ;;

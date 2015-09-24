@@ -15,6 +15,7 @@
         -s <packagename>        find $packagename
         -u                      update SLACKBUILDS.TXT
         -f                      forces a rebuild of package and dependencies
+        -m                      builds but does not install package
         -n                      attempt to install without grabbing dependencies
         -z                      skip md5check for source file. DANGEROUS
         -x                      force to read package information from
