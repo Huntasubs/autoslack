@@ -7,10 +7,7 @@
         -h                      This helptext
         -v                      script version numer
         -c                      clean the package archive
-        -j                      Just grab sources, don't build anything,
-                                skip interactive checks
-        -g                      Just grab sources, don't build anything,
-                                don't skipt interactive checks
+        -g                      Just grab sources, don't build anything.
         -i <packagename>        install package. 
         -s <packagename>        find $packagename
         -u                      update SLACKBUILDS.TXT
