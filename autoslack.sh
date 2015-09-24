@@ -41,10 +41,7 @@ helptext () {
     echo "	-h 			This helptext"
     echo "	-v			script version numer"
     echo "	-c			clean the package archive"
-    echo "	-j			Just grab sources, don't build anything,"
-    echo "				skip interactive checks"
-    echo "	-g			Just grab sources, don't build anything,"
-    echo "				don't skipt interactive checks"
+    echo "	-g			Just grab sources, don't build anything."
     echo "	-i <packagename>	install package. "
     echo "	-s <packagename>	find \$packagename"
     echo "	-u			update SLACKBUILDS.TXT"
@@ -64,12 +61,17 @@ noopts () {
 }
 cleanarchive () {
     read -p "Are you sure you want to clean all of your old builds? yes/no " YESNO
-    if [[ "$YESNO" = [yY]* ]]; then 
-	rm -v /usr/share/autoslack/packages/*
-	exit 0
-    else
-	exit 0
-    fi
+    while true; do
+	if [[ "$YESNO" = [yY]* ]]; then 
+	    rm -v /usr/share/autoslack/packages/*
+	    exit 0
+	elif [[ "$YESNO" [nN]* ]]; then
+	    exit 0
+	else
+	    echo "I didn't catch that"
+	    continue
+    done
+fi
 }
 
 prerun () {
@@ -330,7 +332,7 @@ installer () {
 }
 
 
-while getopts "fnjhxzgmuvcys:i:r:" option
+while getopts "fnjbhxzgmuvcys:i:r:" option
 do 
     case $option in
 	h ) helptext
@@ -352,9 +354,6 @@ do
 	    exit 0
 	    ;;
 	f ) SKIPCHECK="1"
-	    ;;
-	j ) SKIPCHECK="1"
-	    SKIPBUILD="1"
 	    ;;
 	g ) SKIPBUILD="1"
 	    ;;
