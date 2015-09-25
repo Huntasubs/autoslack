@@ -65,13 +65,14 @@ cleanarchive () {
 	if [[ "$YESNO" = [yY]* ]]; then 
 	    rm -v /usr/share/autoslack/packages/*
 	    exit 0
-	elif [[ "$YESNO" [nN]* ]]; then
+	elif [[ "$YESNO" = [nN]* ]]; then
 	    exit 0
 	else
 	    echo "I didn't catch that"
 	    continue
+	fi
+	
     done
-fi
 }
 
 prerun () {
