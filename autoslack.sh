@@ -79,7 +79,7 @@ prerun () {
     if [ -d /usr/share/autoslack/ ]; then
 	echo "" > /dev/null
     else
-	mkdir /usr/share autoslack
+	mkdir /usr/share/autoslack
 	mkdir /usr/share/autoslack/packages
     fi
     #let's make a logging directory
