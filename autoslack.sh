@@ -81,7 +81,6 @@ prerun () {
     else
 	mkdir /usr/share/autoslack
 	mkdir /usr/share/autoslack/packages
-	update
     fi
     #let's make a logging directory
     if [ -d /var/log/autoslack ]; then
@@ -89,7 +88,7 @@ prerun () {
     else
 	mkdir /var/log/autoslack
     fi
-    
+    update
     if ((`grep $PACKAGENAME $SLACKBUILDS -c` >= 1)); then
 	echo "available"
     else
