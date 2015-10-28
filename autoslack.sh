@@ -1,13 +1,13 @@
 #!/bin/bash
 #AutoSlack
-#to grab a package from slackbuilds just type at your prompt 
-#>autoslack $PACKAGENAME 
+#to install a package from slackbuilds just type at your prompt 
+#>autoslack -i $PACKAGENAME 
 #$PACKAGENAME can be in any case whatsover, since this does do
 #some rudimentary fuzzy matching. This also resolves dependencies
 #the "Unix way". (Not really, it's just terrible coding, and potentially
 #has the possibility of spawning infinite autoslacks. Autoslack fhtagn!
-
-SCRIPTVERSION="0.999x"
+set -x
+SCRIPTVERSION="0.9999x"
 SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
 URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
 BUILDPREFIX="/tmp"
@@ -21,6 +21,9 @@ preprerun () {
 	exit 0
     else
 	echo "installing $PACKAGENAME"
+	#as an attempt to fix this freaking case issue.
+	PACKAGENAME=$(grep -iFx "SLACKBUILD NAME: $PACKAGENAME" $SLACKBUILDS | sed 's/SLACKBUILD NAME: //g')
+	echo $PACKAGENAME
 	logfile=$(echo $PACKAGENAME-`date +%d_%m_%y`.log)
     fi
 }
