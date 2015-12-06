@@ -6,8 +6,8 @@
 #some rudimentary fuzzy matching. This also resolves dependencies
 #the "Unix way". (Not really, it's just terrible coding, and potentially
 #has the possibility of spawning infinite autoslacks. Autoslack fhtagn!
-set -x
-SCRIPTVERSION="0.9999x"
+
+SCRIPTVERSION="1.01"
 SLAURL="rsync://slackbuilds.org/slackbuilds/14.1/SLACKBUILDS.TXT"
 URPREFIX="rsync://slackbuilds.org/slackbuilds/14.1"
 BUILDPREFIX="/tmp"
@@ -23,6 +23,14 @@ preprerun () {
 	echo "installing $PACKAGENAME"
 	#as an attempt to fix this freaking case issue.
 	PACKAGENAME=$(grep -iFx "SLACKBUILD NAME: $PACKAGENAME" $SLACKBUILDS | sed 's/SLACKBUILD NAME: //g')
+	if [[ $PACKAGENAME =~ ^$ ]]; then
+	    echo "Something went wrong, package not found"
+	    echo "Try to slackbuilds -s \$packagename"
+	    exit 0
+	else
+	    echo "" > /dev/null
+	fi
+	
 	echo $PACKAGENAME
 	logfile=$(echo $PACKAGENAME-`date +%d_%m_%y`.log)
     fi
@@ -168,56 +176,65 @@ depcheck () {
 }
 
 
-arraychecking() {
-    for x in "${URLARR[var]}"
-    do 
+arraychecking () {
+
+
+    for x in ${URLARR[@]}; do
 	filename=$(echo $x | sed 's/.*\///g')
 	largefix=$(echo $BUILDPREFIX/$PACKAGENAME/$filename)
+	y=(${MDARR[var]})
+	echo $y	
 	rm $BUILDPREFIX/$PACKAGENAME/$filename
 	wget $x -P $BUILDPREFIX/$PACKAGENAME
 	if [[ "$MDCHECK" != 1 ]]; then
-	    for y in "${MDARR[var]}"; do
-		#if [[ `md5sum $filename | sed "s/$filename//g"` = "28643857176697dc66786ee898089ca3" ]]; then
-		if [[ `md5sum $BUILDPREFIX/$PACKAGENAME/$filename | awk '{ print $1 }'` = `echo "$y" | sed 's/ //g'` ]]; then
-		    echo "yay"
-		    echo "------------got------------"
-		    md5sum $BUILDPREFIX/$PACKAGENAME/$filename 
-		    echo "----------expected---------"
-		    echo "$y"
-		    echo "---------------------------"
-		    #increment array level to grab the next url and MD5sum
-		    var=$((var+1))
-		    break
-		else
-		    echo "------------got------------"
-		    md5sum $BUILDPREFIX/$PACKAGENAME/$filename 
-		    echo "----------expected---------"
-		    echo "$y"
-		    echo "---------------------------"
-		    echo $MDARR
-		    echo "$package $filename does not pass md5 check. "
-		    echo "if you are sure about installing this,"
-		    echo "re-run autoslack with the -z option"
-		    exit 0
-		fi
-	    done
-	else
-	    echo "skipping md5check"
+	    #		#if [[ `md5sum $filename | sed "s/$filename//g"` = "28643857176697dc66786ee898089ca3" ]]; then
+	    if [[ `md5sum $BUILDPREFIX/$PACKAGENAME/$filename | awk '{ print $1 }'` = `echo "$y" | sed 's/ //g'` ]]; then
+		echo "yay"
+		echo "------------got------------"
+		md5sum $BUILDPREFIX/$PACKAGENAME/$filename 
+		echo "----------expected---------"
+		echo "$y"
+		echo "---------------------------"
+	    else
+		echo "------------got------------"
+		md5sum $BUILDPREFIX/$PACKAGENAME/$filename 
+		echo "----------expected---------"
+		echo "$y"
+		echo "---------------------------"
+		echo $MDARR
+		echo "$package $filename does not pass md5 check. "
+		echo "if you are sure about installing this,"
+		echo "re-run autoslack with the -z option"
+		exit 0
+	    fi
 	fi
+	var=$((var+1))
     done
 }
 
-arraychecking2 () {
+arraychecking2() {
     echo "ARRAYCHECK"
     #echo ${MDARR@}
     #echo ${urarr@}
-    echo "ARRAYS"
-    echo $URLARR
-    echo $MDARR
-    for x in "${URLARR[var]}"
+  #  echo "ARRAYS"
+   # echo $URLARR
+   # echo $MDARR
+   # echo $URLS
+    var="0"
+   # for x in ${URLARR[var]}
+   # do
+	#echo "$x"
+	#echo "$var"
+	#var=$((var+1))
+	#echo $var
+	#break
+    #done
+    for y in ${MDARR[var]}
     do
-	echo "$x"
+	echo $y
+	echo ${URLARR[var]}
     done
+
     exit 0
 }
 
@@ -232,8 +249,8 @@ curlgrab32 (){
 	MDS=$(grep -iFx "SLACKBUILD NAME: $PACKAGENAME" $SLACKBUILDS -A 6 | grep "SLACKBUILD MD5SUM" | sed 's/SLACKBUILD MD5SUM: //g')
     fi
     
-    URLARR=($URLS)
-    MDARR=($MDS)
+    URLARR=(${URLS})
+    MDARR=(${MDS})
     if [[ $URLARR = "UNSUPPORTED" ]];
     then
 	while true; do
@@ -250,7 +267,7 @@ curlgrab32 (){
 	    fi
 	done
     else
-	break
+	echo "" > /dev/null
     fi
 
 	
@@ -265,8 +282,8 @@ curlgrab64 () {
 	URLS=$(grep -iFx "SLACKBUILD NAME: $PACKAGENAME" $SLACKBUILDS -A 5 | grep DOWNLOAD_x86_64 | sed  's/SLACKBUILD DOWNLOAD_x86_64: //g')
 	MDS=$(grep -iFx "SLACKBUILD NAME: $PACKAGENAME" $SLACKBUILDS -A 7 | grep "SLACKBUILD MD5SUM_x86_64:" | sed 's/SLACKBUILD MD5SUM_x86_64: //g')
     fi
-    URLARR=($URLS)
-    MDARR=($MDS)
+    URLARR=(${URLS})
+    MDARR=(${MDS})
 
     if [[ $URLARR = "UNSUPPORTED" ]];
     then
@@ -285,7 +302,7 @@ curlgrab64 () {
 	done
 	
     else
-	break
+	echo "" > /dev/null
     fi
 
 }
