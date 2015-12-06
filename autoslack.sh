@@ -15,6 +15,8 @@ SLACKBUILDS=/usr/share/autoslack/SLACKBUILDS.TXT
 SLACKRCHIVE=/usr/share/autoslack/packages/
 PARSESLACK=0
 
+
+
 preprerun () {
     if [[ $PACKAGENAME =~ ^$ ]]; then	
 	echo "You did not select any packages to install, exiting" 
@@ -88,7 +90,7 @@ cleanarchive () {
 
 prerun () {
     if [ -d /usr/share/autoslack/ ]; then
-	echo "" > /dev/null
+	continue
     else
 	mkdir /usr/share/autoslack
 	mkdir /usr/share/autoslack/packages
@@ -109,7 +111,7 @@ prerun () {
 }
 
 update () {
-    rsync -v $SLAURL /usr/share/autoslack
+    rsync -v $SLAURL /usr/share/autoslack/
 }
 
 packagecheck () {
@@ -396,9 +398,9 @@ done
 
 #hah, this was most of the script
 
-preprerun
 prerun
-update
+preprerun
+#update
 grabslackbuild
 parsefromfile
 if [[ "$SKIPCHECK" = "1" ]]; then
