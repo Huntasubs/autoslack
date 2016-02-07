@@ -29,8 +29,6 @@ preprerun () {
 	    echo "Something went wrong, package not found"
 	    echo "Try to slackbuilds -s \$packagename"
 	    exit 0
-	else
-	    echo "" > /dev/null
 	fi
 	
 	echo $PACKAGENAME
@@ -89,16 +87,12 @@ cleanarchive () {
 }
 
 prerun () {
-    if [ -d /usr/share/autoslack/ ]; then
-	continue
-    else
-	mkdir /usr/share/autoslack
-	mkdir /usr/share/autoslack/packages
+    if [ ! -d "/usr/share/autoslack/" ]; then
+	mkdir "/usr/share/autoslack"
+	mkdir "/usr/share/autoslack/packages"
     fi
     #let's make a logging directory
-    if [ -d /var/log/autoslack ]; then
-	echo "" > /dev/null
-    else
+    if [ ! -d "/var/log/autoslack" ]; then
 	mkdir /var/log/autoslack
     fi
     update
@@ -134,8 +128,6 @@ packagecheck () {
 		continue
 	    fi
 	done
-    else
-	echo "" > /dev/null
     fi
 }
 
