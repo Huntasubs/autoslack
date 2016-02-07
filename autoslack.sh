@@ -29,8 +29,7 @@ preprerun () {
 	    echo "Something went wrong, package not found"
 	    echo "Try to autoslack -s \$packagename"
 	    exit 0
-	fi
-	
+	fi	
 	echo $PACKAGENAME
 	logfile=$(echo $PACKAGENAME-`date +%d_%m_%y`.log)
     fi
@@ -82,7 +81,6 @@ cleanarchive () {
 	    echo "I didn't catch that"
 	    continue
 	fi
-	
     done
 }
 
