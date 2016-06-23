@@ -48,3 +48,11 @@ installing
 This script can probably be run from everywhere you like, but really wants a symlink to autoslack 
 in your $PATH somewhere. 
 
+--------------
+historical 
+--------------
+I wrote this script after it became clear that I'd be installing slackware again, and I really *really* did not feel 
+like recompiling a bunch of new packages. Again. The best thing I can say for this - it exists, I use it. 
+In retrospect, there is probably a number of things that can be done with this code, but in reality, unless I personally
+find a race condition, it probably isn't getting too much love. If you decide to use it (for some ungodly reason?) It should
+work on all future versions of Slackware, provided you adjust the URL accordingly. 
